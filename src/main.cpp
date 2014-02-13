@@ -51,8 +51,8 @@ void handleSample(size_t i, bool flag)
     img = img_original(Rect(0,0,48,48));
     computeHog(img, flag);
 
-//    flip(img, img, 0);
-//    computeHog(img, flag);
+    flip(img, img, 0);
+    computeHog(img, flag);
 
     img.release();
     img_original.release();

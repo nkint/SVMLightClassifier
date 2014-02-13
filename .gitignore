@@ -52,6 +52,7 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+*.cbp
 
 # shadow build.. does not track build directories
 ######################

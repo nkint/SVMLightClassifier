@@ -13,10 +13,10 @@
 using namespace cv;
 
 const Size sampleSize(48,48);
+const Size winStride(12,12);
 
 void train()
 {
-
     SVMLight::SVMTrainer svm("features.dat");
 
     HOGDescriptor hog;
@@ -29,17 +29,19 @@ void train()
         std::ostringstream os;
         os << TRAINING_SET_PATH << "positive/" << std::setw(4) << std::setfill('0') << i << ".png";
 
-        Mat img = imread(os.str(),CV_LOAD_IMAGE_GRAYSCALE);
-        if (!img.data) {
+        Mat img_original = imread(os.str(),CV_LOAD_IMAGE_GRAYSCALE);
+        if (!img_original.data) {
             if(FILE_VERBOSE) std::cout << "problems.. " << os.str() << std::endl;
             continue;
         } else {
             if(FILE_VERBOSE)std::cout << "read: " << os.str() << std::endl;
         }
+        //this is because the samples are 50x50
+        Mat img = img_original(Rect(1,1,48,48));
 
         // obtain feature vector:
         vector<float> featureVector;
-        hog.compute(img, featureVector, Size(8, 8), Size(0, 0));
+        hog.compute(img, featureVector, winStride, Size(0, 0));
 
         // write feature vector to file that will be used for training:
         svm.writeFeatureVectorToFile(featureVector, true);                  // true = positive sample
@@ -89,15 +91,21 @@ void classify()
     Mat m = imread("/Users/alberto/tmp/samples/fullframe.png");
 
     vector<Rect> found;
+    vector<Point> foundPoint;
     Size padding(Size(0, 0));
-    Size winStride(Size(48, 48));
 
     std::cout << "try to detect.." << std::endl;
-    hog.detectMultiScale(m, found, 0.0, winStride, padding, 1.01, 0.1);
-    std::cout << "found: " << found.size() << std::endl;
+    //hog.detectMultiScale(m, found, 0.0, winStride, padding, 1.01, 0.1);
+    hog.detect(m, foundPoint, 0.0, winStride, padding);
+    std::cout << "found: " << foundPoint.size() << std::endl;
 
-    for(int i=0; i<found.size(); ++i) {
-        rectangle(m, found[i], Scalar(255,255,255));
+    for(int i=0; i<foundPoint.size(); ++i) {
+        Rect r;
+        r.x = foundPoint[i].x;
+        r.y = foundPoint[i].y;
+        r.width = 48;
+        r.height = 48;
+        rectangle(m, r, Scalar(255,255,255));
     }
 
     imshow("result", m);

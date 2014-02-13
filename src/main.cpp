@@ -8,75 +8,75 @@
 #include "SvmLightLib.h"
 
 #define TRAINING_SET_PATH "/Users/alberto/tmp/samples/"
-#define FILE_VERBOSE true
+#define FILE_VERBOSE false
 
 using namespace cv;
 
 const Size sampleSize(48,48);
 const Size winStride(12,12);
 
+SVMLight::SVMTrainer svm("features.dat");
+HOGDescriptor hog;
+std::ostringstream os;
+vector<float> featureVector;
+size_t posCount = 0, negCount = 0;
+
+void cleanup() {
+    featureVector.clear();
+    os.clear(); os.seekp(0);    // reset string stream
+    os.str("");
+}
+
+void computeHog(Mat img, bool flag)
+{
+    hog.compute(img, featureVector, winStride, Size(0, 0));
+    svm.writeFeatureVectorToFile(featureVector, (flag?true:false) );
+    (flag ? posCount++ : negCount++);
+}
+
+void handleSample(size_t i, bool flag)
+{
+    Mat img, img_original;
+    // do the same for negative sample:
+    os << TRAINING_SET_PATH << (flag?"positive/":"negative/") << std::setw(4) << std::setfill('0') << i << ".png";
+    img_original = imread(os.str(),CV_LOAD_IMAGE_GRAYSCALE);
+    if (!img_original.data) {
+        if(FILE_VERBOSE)std::cout << "problems.. " << os.str() << std::endl;
+        cleanup();
+        return;
+    } else {
+        if(FILE_VERBOSE)std::cout << "read: " << os.str() << std::endl;
+    }
+
+    img = img_original(Rect(0,0,48,48));
+    computeHog(img, flag);
+
+//    flip(img, img, 0);
+//    computeHog(img, flag);
+
+    img.release();
+    img_original.release();
+    cleanup();
+}
+
 void train()
 {
-    SVMLight::SVMTrainer svm("features.dat");
-
-    HOGDescriptor hog;
     hog.winSize = Size(sampleSize);
 
-    size_t posCount = 0, negCount = 0;
-    for (size_t i = 1; i <= 800; ++i)
+    for (size_t i = 1; i <= 8000; ++i)
     {
-        // in this concrete case I had files 0001.JPG to 0800.JPG in both "positive" and "negative" subfolders:
-        std::ostringstream os;
-        os << TRAINING_SET_PATH << "positive/" << std::setw(4) << std::setfill('0') << i << ".png";
-
-        Mat img_original = imread(os.str(),CV_LOAD_IMAGE_GRAYSCALE);
-        if (!img_original.data) {
-            if(FILE_VERBOSE) std::cout << "problems.. " << os.str() << std::endl;
-            continue;
-        } else {
-            if(FILE_VERBOSE)std::cout << "read: " << os.str() << std::endl;
-        }
-        //this is because the samples are 50x50
-        Mat img = img_original(Rect(1,1,48,48));
-
-        // obtain feature vector:
-        vector<float> featureVector;
-        hog.compute(img, featureVector, winStride, Size(0, 0));
-
-        // write feature vector to file that will be used for training:
-        svm.writeFeatureVectorToFile(featureVector, true);                  // true = positive sample
-        posCount++;
-
-        // clean up:
-        featureVector.clear();
-        img.release();              // we don't need the original image anymore
-        os.clear(); os.seekp(0);    // reset string stream
-
-        // do the same for negative sample:
-        os << TRAINING_SET_PATH << "negative/" << std::setw(4) << std::setfill('0') << i << ".png";
-        img = imread(os.str(),CV_LOAD_IMAGE_GRAYSCALE);
-        if (!img.data) {
-            if(FILE_VERBOSE)std::cout << "problems.. " << os.str() << std::endl;
-            continue;
-        } else {
-            if(FILE_VERBOSE)std::cout << "read: " << os.str() << std::endl;
-        }
-
-        hog.compute(img, featureVector, Size(8, 8), Size(0, 0));
-        svm.writeFeatureVectorToFile(featureVector, false);
-        negCount++;
-        img.release();
+        handleSample(i, true);
+        handleSample(i, false);
     }
 
     std::cout   << "finished writing features: "
                 << posCount << " positive and "
                 << negCount << " negative samples used"
                 << std::endl;
+
     std::string modelName("classifier.dat");
     svm.trainAndSaveModel(modelName);
     std::cout   << "SVM saved to " << modelName << std::endl;
-
-
 }
 
 void classify()
@@ -89,6 +89,7 @@ void classify()
     hog.setSVMDetector(descriptorVector);
 
     Mat m = imread("/Users/alberto/tmp/samples/fullframe.png");
+    Mat m1 = m.clone();
 
     vector<Rect> found;
     vector<Point> foundPoint;
@@ -99,6 +100,7 @@ void classify()
     hog.detect(m, foundPoint, 0.0, winStride, padding);
     std::cout << "found: " << foundPoint.size() << std::endl;
 
+
     for(int i=0; i<foundPoint.size(); ++i) {
         Rect r;
         r.x = foundPoint[i].x;
@@ -106,6 +108,17 @@ void classify()
         r.width = 48;
         r.height = 48;
         rectangle(m, r, Scalar(255,255,255));
+
+
+
+
+        Mat imageroi = m1(r);
+        std::stringstream ss;
+        ss << "/Users/alberto/tmp/samples/tmp/test";
+        ss << i;
+        ss << ".png";
+        cv::imwrite(ss.str(), imageroi);
+
     }
 
     imshow("result", m);

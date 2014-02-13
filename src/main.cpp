@@ -68,7 +68,8 @@ void train()
 
     std::cout   << "finished writing features: "
                 << posCount << " positive and "
-                << negCount << " negative samples used";
+                << negCount << " negative samples used"
+                << std::endl;
     std::string modelName("classifier.dat");
     svm.trainAndSaveModel(modelName);
     std::cout   << "SVM saved to " << modelName << std::endl;
@@ -94,6 +95,12 @@ void classify()
     std::cout << "try to detect.." << std::endl;
     hog.detectMultiScale(m, found, 0.0, winStride, padding, 1.01, 0.1);
     std::cout << "found: " << found.size() << std::endl;
+
+    for(int i=0; i<found.size(); ++i) {
+        rectangle(m, found[i], Scalar(255,255,255));
+    }
+
+    imshow("result", m);
 }
 
 int main()
@@ -132,6 +139,8 @@ int main()
               << "    " << time_clock << " CPU clock" << std::endl
               << "    " << time_time << " in time" << std::endl
               << std::endl;
+
+    waitKey();
 
     return 0;
 }

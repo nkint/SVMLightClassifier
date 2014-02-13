@@ -12,12 +12,12 @@
  * 
  */
 
-namespace SVMLight 
+namespace SVMLight
 {
 	extern "C" 
 	{
-		#include "svm_common.h"	
-        #include "svm_learn.h"
+		#include "svm/svm_common.h"	
+        #include "svm/svm_learn.h"
 	}
 
     // more or less original wrapper of SVMLight taken from https://github.com/DaHoC/trainHOG
@@ -160,7 +160,7 @@ namespace SVMLight
         featuresFile_.open(featuresFileName_.c_str(), std::ios::out);
     }
 
-    void SVMTrainer::writeFeatureVectorToFile(const std::vector<float>& featureVector, bool isPositive)
+    void SVMTrainer::writeFeatureVectorToFile(std::vector<float>& featureVector, bool isPositive)
     {
         featuresFile_ << ((isPositive) ? "+1" : "-1");
         for (unsigned int feature = 0; feature < featureVector.size(); ++feature) {
@@ -186,8 +186,9 @@ namespace SVMLight
         
     std::vector<float> SVMClassifier::getDescriptorVector()
     {
-        std::vector<float> descriptorVector;       
-        SVMLightImpl::getInstance()->getSingleDetectingVector(descriptorVector, std::vector<unsigned int>() /* indices */);
+        std::vector<float> descriptorVector;
+        std::vector<unsigned int> indices;
+        SVMLightImpl::getInstance()->getSingleDetectingVector(descriptorVector, indices);
         return descriptorVector;
     }
 

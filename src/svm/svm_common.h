@@ -24,8 +24,8 @@
 			  	   valid range of long int type!) */
 
 # include <stdio.h>
-//# include <stdint.h>
-#define int32_t __int32
+# include <stdint.h>
+//#define int32_t __int32
 # include <ctype.h>
 # include <math.h>
 # include <string.h>

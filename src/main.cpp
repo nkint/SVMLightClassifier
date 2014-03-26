@@ -2,6 +2,9 @@
 #include <iomanip>
 #include <sstream>
 #include <ctime>
+#include <iostream>
+#include <fstream>
+#include <vector>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -18,7 +21,7 @@ const Size winStride(12,12);
 SVMLight::SVMTrainer svm("features.dat");
 HOGDescriptor hog;
 std::ostringstream os;
-vector<float> featureVector;
+std::vector<float> featureVector;
 size_t posCount = 0, negCount = 0;
 
 void cleanup() {
@@ -39,7 +42,7 @@ void handleSample(size_t i, bool flag)
     Mat img, img_original;
     // do the same for negative sample:
     os << TRAINING_SET_PATH << (flag?"positive/":"negative/") << std::setw(4) << std::setfill('0') << i << ".png";
-    img_original = imread(os.str(),CV_LOAD_IMAGE_GRAYSCALE);
+    img_original = imread(os.str(), IMREAD_GRAYSCALE);
     if (!img_original.data) {
         if(FILE_VERBOSE)std::cout << "problems.. " << os.str() << std::endl;
         cleanup();
@@ -51,8 +54,8 @@ void handleSample(size_t i, bool flag)
     img = img_original(Rect(0,0,48,48));
     computeHog(img, flag);
 
-    flip(img, img, 0);
-    computeHog(img, flag);
+//    flip(img, img, 1);
+//    computeHog(img, flag);
 
     img.release();
     img_original.release();
@@ -84,15 +87,15 @@ void classify()
     HOGDescriptor hog;
     hog.winSize = Size(sampleSize);
     SVMLight::SVMClassifier c("classifier.dat");
-    vector<float> descriptorVector = c.getDescriptorVector();
+    std::vector<float> descriptorVector = c.getDescriptorVector();
     std::cout << descriptorVector.size() << std::endl;
     hog.setSVMDetector(descriptorVector);
 
-    Mat m = imread("/Users/alberto/tmp/samples/fullframe.png");
+    Mat m = imread("/Users/alberto/tmp/samples/fullframe9.png");
     Mat m1 = m.clone();
 
-    vector<Rect> found;
-    vector<Point> foundPoint;
+    std::vector<Rect> found;
+    std::vector<Point> foundPoint;
     Size padding(Size(0, 0));
 
     std::cout << "try to detect.." << std::endl;
@@ -109,9 +112,6 @@ void classify()
         r.height = 48;
         rectangle(m, r, Scalar(255,255,255));
 
-
-
-
         Mat imageroi = m1(r);
         std::stringstream ss;
         ss << "/Users/alberto/tmp/samples/tmp/test";
@@ -124,7 +124,7 @@ void classify()
     imshow("result", m);
 }
 
-int main()
+int _main()
 {
     clock_t start_clock, end_clock;
     time_t start_time, end_time;

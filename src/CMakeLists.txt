@@ -17,6 +17,7 @@ set ( SVMTest_HDRS
 
 set ( SVMTest_SRCS
 	main.cpp
+        train_HOG.cpp
 	SvmLightLib.cpp
         svm/svm_struct_main.c
         svm/svm_struct_learn.c

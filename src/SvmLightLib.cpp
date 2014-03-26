@@ -62,8 +62,8 @@ namespace SVMLight
             learn_parm->svm_c = 0.01; // -c 0.01
             learn_parm->type = CLASSIFICATION;
             learn_parm->remove_inconsistent = 0; // -i 0 - Important
-            kernel_parm->rbf_gamma = 1.0;
-            kernel_parm->coef_lin = 1;
+            kernel_parm->rbf_gamma = 0.0;
+            kernel_parm->coef_lin = 0;
             kernel_parm->coef_const = 1;
             kernel_parm->kernel_type = LINEAR; // -t 0
             kernel_parm->poly_degree = 3;
